@@ -9,6 +9,9 @@ export class UserService {
 
   async getUserById(id: string) {
     return this.prisma.user.findUnique({
+      omit: {
+        password: true,
+      },
       where: {
         id,
       },
@@ -28,23 +31,57 @@ export class UserService {
 
   async getUsers() {
     return this.prisma.user.findMany({
+      omit: {
+        password: true,
+      },
       include: {
         projects: true,
       },
     });
   }
 
-  // async getProfile(id: string) {
-  //   const profile = await this.getUserById(id);
+  async getProfile(id: string) {
+    // УБРАТЬ ЗАПРОСЫ И СДЕЛАТЬ ЧЕРЕЗ JOIN (PRISMA INCLUDE)
+    // const user = await this.getUserById(id);
+    // const projects = await this.prisma.project.findMany({
+    //   where: {
+    //     userId: profile.id,
+    //   },
+    // });
+    // const tasksList = await this.prisma.taskList.findMany({
+    //   where: {
+    //     projectId: { in: projects.map((obj) => obj.id) },
+    //   },
+    // });
+    // const tasks = await this.prisma.task.findMany({
+    //   where: {
+    //     taskId: { in: tasksList.map((obj) => obj.id) },
+    //   },
+    // });
 
-  //   const totalTasks = profile.tasks.length;
-  //   const completedTasks = await this.prisma.task.count({
-  //     where: {
-  //       userId: id,
-  //       isCompleted: true,
-  //     },
-  //   });
-  // }
+    const profile = await this.prisma.user.findMany({
+      omit: {
+        password: true,
+      },
+      where: {
+        id,
+      },
+      include: {
+        projects: {
+          include: {
+            tasks_list: {
+              include: {
+                tasks: {},
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return profile;
+    // return { projects, tasksList, tasks };
+  }
 
   async createUser(dto: UserDto) {
     const user = {

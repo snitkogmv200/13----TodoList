@@ -5,10 +5,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
 import { UserDto } from 'src/user/user.dto';
 import { UserService } from 'src/user/user.service';
 import { verify } from 'argon2';
+import { AuthDto } from './auth.dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -33,21 +34,21 @@ export class AuthService {
   }
 
   private async generateToken(user: User) {
-    const payload = { email: user.email, id: user.id, nickname: user.nickname };
+    const payload = { id: user.id, email: user.email };
 
     return {
       token: this.jwtService.sign(payload),
     };
   }
 
-  async login(userDto: UserDto) {
+  async login(userDto: AuthDto) {
     const user = await this.validateUser(userDto);
     return this.generateToken(user);
   }
 
-  private async validateUser(userDto: UserDto) {
+  private async validateUser(userDto: AuthDto) {
     const user = await this.userService.getUserByEmail(userDto.email);
-    const passwordEquals = await verify(userDto.password, user.password);
+    const passwordEquals = await verify(user.password, userDto.password);
     if (user && passwordEquals) {
       return user;
     }

@@ -1,40 +1,32 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEmail,
-  IsOptional,
-  IsString,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { IsEmail, IsOptional, IsString, Length } from 'class-validator';
 
 export class UserDto {
   @ApiProperty({
     example: 'grigoriy.snitko@mail.ru',
     description: 'Почтовый ящик',
   })
-  @IsEmail()
+  @IsEmail({}, { message: 'Некорректный email' })
   @IsOptional()
-  email: string;
+  email?: string;
 
   @ApiProperty({ example: 'Гриша', description: 'Имя пользователя' })
-  @IsString()
   @IsOptional()
-  name: string;
+  @IsString({ message: 'Должно быть строкой' })
+  name?: string;
 
   @ApiProperty({
     example: 'Grishanchik',
     description: 'Уникальный никнейм пользователя',
   })
-  nickname: string;
+  @IsString({ message: 'Должно быть строкой' })
+  nickname?: string;
 
   @ApiProperty({ example: '12345', description: 'Пароль пользователя' })
   @IsOptional()
-  @MinLength(4, {
-    message: 'The password must be at least 4 characters long',
-  })
-  @MaxLength(32, {
-    message: 'The password must be no more than 32 characters long',
+  @Length(4, 32, {
+    message: 'The password must be at least 4 and no more than 32',
   })
   @IsString()
-  password?: string;
+  readonly password?: string;
 }

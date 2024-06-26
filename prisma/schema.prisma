@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["omitApi"]
 }
 
 datasource db {
@@ -16,6 +17,7 @@ model User {
   nickname      String      @unique @db.VarChar(64)
   password      String      @db.VarChar(128)
   projects      Project[]
+  tasks         Task[]
 
   @@map("user")
 }
@@ -27,11 +29,7 @@ model Project {
   description  String?  @db.VarChar(128)
   userId       String   @map("user_id")
   user         User     @relation(fields: [userId], references: [id])
-  productivityId String @map("productivity_id")
-  productivity Productivity @relation(fields: [productivityId], references: [id]) 
-  categoryId  String @map("category_id")
-  category Category @relation(fields: [categoryId], references: [id])
-  tasks        Task[]
+  tasks_list   TaskList[]
 
   @@map("project")
 }
@@ -43,27 +41,23 @@ model Task {
   name          String
   isCompleted   Boolean  @default(false) @map("is_completed")
   sequence_number      Int @default(autoincrement())
-  projectId     String    @map("projectId")
-  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id])
+  taskId     String?    @map("task_list_id")
+  task_list  TaskList?   @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@map("task")
 }
 
-model Productivity {
+model TaskList {
   id          String      @id @default(cuid())
   value       String      @unique @db.VarChar(64)
   description String?     @db.VarChar(128)
   sequence_number      Int @default(autoincrement())
-  projects      Project[]
+  projectId    String   @map("project_id")
+  project      Project  @relation(fields: [projectId], references: [id])
+  tasks        Task[]
 
-  @@map("productivity")
+  @@map("task_list")
 }
 
-model Category {
-  id          String      @id @default(cuid())
-  name        String      @db.VarChar(64)
-  description String?     @db.VarChar(128)
-  projects    Project[]
-
-  @@map("category")
-}
