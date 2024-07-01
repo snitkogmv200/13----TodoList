@@ -3,46 +3,50 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   HttpException,
   Put,
   UsePipes,
-  ValidationPipe,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UserDto } from './user.dto';
+import { UserDto } from './dto/user.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserModel } from './user.entity';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { ValidationPipe } from 'src/pipes/validation.pipe';
+import { CurrentUser } from 'src/auth/decorators/user.decorator';
 
 @ApiTags('Пользователи')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UsePipes(new ValidationPipe())
+  @UsePipes(ValidationPipe)
   @ApiOperation({ summary: 'Создание пользователя' })
-  @ApiResponse({ status: 201, type: UserModel })
+  @ApiResponse({ status: 200, type: UserModel })
   @UseGuards(JwtAuthGuard)
   @Post()
   async create(@Body() createUserDto: UserDto) {
     return this.userService.createUser(createUserDto);
   }
 
-  @ApiOperation({ summary: 'Получение пользователя' })
-  @UseGuards(JwtAuthGuard)
+  // @ApiOperation({ summary: 'Получение пользователя' })
+  // @ApiResponse({ status: 200, type: UserModel })
+  // @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const user = await this.userService.getUserById(id);
-    if (!user) throw new HttpException('User Not Found', 404);
+  async findOne(@Param('id', new ParseUUIDPipe()) id: string) {
+    console.log('fssf');
+    // const user = await this.userService.getUserById(id, userId);
+    // if (!user) throw new HttpException('User Not Found', 404);
 
-    return user;
+    // return user;
   }
 
-  @ApiOperation({ summary: 'Получение пользователя по emal' })
+  @ApiOperation({ summary: 'Получение пользователя по email' })
+  @ApiResponse({ status: 200, type: UserModel })
   @UseGuards(JwtAuthGuard)
   @Get('email/:email')
   async findOneAlternate(@Param('email') email: string) {
@@ -53,6 +57,7 @@ export class UserController {
   }
 
   @ApiOperation({ summary: 'Получение профиля' })
+  @ApiResponse({ status: 200, type: UserModel })
   @UseGuards(JwtAuthGuard)
   @Get('profile/:id')
   async findProfileUser(@Param('id') id: string) {
@@ -62,7 +67,11 @@ export class UserController {
     return profile;
   }
 
-  @ApiOperation({ summary: 'Получение всех пользователей' })
+  @ApiOperation({
+    summary:
+      'Получение всех пользователей (Нарушает приватность пользователей, сделал для себя)',
+  })
+  @ApiResponse({ status: 200, type: [UserModel] })
   @UseGuards(JwtAuthGuard)
   @Get()
   async findAll() {
@@ -72,8 +81,12 @@ export class UserController {
   @ApiOperation({ summary: 'Редактирование пользователя' })
   @ApiResponse({ status: 200, type: UserModel })
   @Put(':id')
-  async updateUser(@Param('id') id: string, @Body() dto: UserDto) {
-    return this.userService.updateUserById(id, dto);
+  async updateUser(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @Body() dto: UserDto,
+  ) {
+    return this.userService.updateUserById(id, userId, dto);
   }
 
   // @Delete(':id')

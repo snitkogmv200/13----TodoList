@@ -7,7 +7,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserDto } from 'src/user/user.dto';
+import { UserDto } from 'src/user/dto/user.dto';
 import { AuthDto } from './auth.dto';
 import { ApiTags } from '@nestjs/swagger';
 

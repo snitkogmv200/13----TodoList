@@ -37,4 +37,9 @@ export class UserModel implements User {
     description: 'Пароль, хешируется автоматически',
   })
   password: string;
+  @ApiProperty({
+    example: '[{...}, {...}, {...}]',
+    description: 'Проекты пользователя',
+  })
+  projects: object[];
 }

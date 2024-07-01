@@ -15,5 +15,5 @@ export class TaskDto {
 
   @IsString()
   @IsOptional()
-  task_list_id?: string;
+  task_list_id: string;
 }

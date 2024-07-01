@@ -14,7 +14,7 @@ import {
 import { ProjectService } from './project.service';
 import { ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { ProjectDto } from './project.dto';
+import { ProjectDto } from './dto/project.dto';
 import { CurrentUser } from 'src/auth/decorators/user.decorator';
 
 @Controller('/project')
@@ -35,7 +35,7 @@ export class ProjectController {
     @CurrentUser('id') userId: string,
     @Body() createProject: ProjectDto,
   ) {
-    return this.projectService.createProject(userId, ProjectDto);
+    return this.projectService.createProject(userId, createProject);
   }
 
   @UsePipes(new ValidationPipe())

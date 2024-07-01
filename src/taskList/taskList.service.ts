@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TaskListDto } from './taskList.dto';
+import { ProjectService } from 'src/project/project.service';
 
+// МОЖНО СВЯЗАТЬ С USER И СДЕЛАТЬ ЗАПРОСЫ ПОДОБНЫЕ В ДРУГИХ СУЩНОСТЯХ
 @Injectable()
 export class TaskListService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private projectService: ProjectService,
+  ) {}
 
   async getTaskListByUserId(userId: string) {
     return this.prisma.taskList.findMany({
@@ -24,12 +29,21 @@ export class TaskListService {
   async createTaskList(userId: string, dto: TaskListDto) {
     const { value, project_id } = dto;
 
+    const projectsOfUser = this.projectService.getProjectByUserId(userId);
+    let findProjectArray = (await projectsOfUser).filter(
+      (obj) => obj.id === project_id,
+    );
+    let findProject;
+    findProjectArray.map((obj) => (findProject = obj));
+
+    if (!findProject) throw new HttpException('Project Not Found', 404);
+
     return this.prisma.taskList.create({
       data: {
         value,
         project: {
           connect: {
-            id: project_id,
+            id: findProject.id,
           },
         },
       },

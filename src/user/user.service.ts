@@ -1,5 +1,5 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { UserDto } from './user.dto';
+import { UserDto } from './dto/user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hash } from 'argon2';
 
@@ -7,7 +7,10 @@ import { hash } from 'argon2';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async getUserById(id: string) {
+  async getUserById(id: string, userId: string) {
+    if (id !== userId)
+      throw new HttpException('The user can only view their own data', 403);
+
     return this.prisma.user.findUnique({
       omit: {
         password: true,
@@ -25,6 +28,9 @@ export class UserService {
     return this.prisma.user.findUnique({
       where: {
         email,
+      },
+      include: {
+        projects: true,
       },
     });
   }
@@ -93,18 +99,25 @@ export class UserService {
 
     return this.prisma.user.create({
       data: user,
+      include: {
+        projects: true,
+      },
     });
   }
 
-  async updateUserById(id: string, dto: UserDto) {
+  async updateUserById(id: string, userId: string, dto: UserDto) {
     let data = dto;
-    const findUser = await this.getUserById(id);
+    const findUser = await this.getUserById(id, userId);
     if (!findUser) throw new HttpException('User Not Found', 404);
 
     if (dto.password) {
       data = { ...dto, password: await hash(dto.password) };
     }
 
-    return this.prisma.user.update({ where: { id }, data });
+    return this.prisma.user.update({
+      where: { id },
+      data,
+      include: { projects: true },
+    });
   }
 }

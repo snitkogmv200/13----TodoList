@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ProjectDto } from './project.dto';
+import { ProjectDto } from './dto/project.dto';
 
 @Injectable()
 export class ProjectService {
@@ -11,18 +11,28 @@ export class ProjectService {
       where: {
         userId,
       },
+      include: {
+        tasks_list: {
+          include: {
+            tasks: true,
+          },
+        },
+      },
     });
   }
 
   async createProject(userId: string, dto: ProjectDto) {
     return this.prisma.project.create({
       data: {
-        ...dto,
         user: {
           connect: {
             id: userId,
           },
         },
+        ...dto,
+      },
+      include: {
+        tasks_list: true,
       },
     });
   }
@@ -38,7 +48,7 @@ export class ProjectService {
   }
 
   async deleteProject(projectId, userId) {
-    return this.prisma.task.delete({
+    return this.prisma.project.delete({
       where: {
         id: projectId,
         userId,

@@ -13,8 +13,9 @@ import {
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { TaskDto } from './task.dto';
+import { TaskDto } from './dto/task.dto';
 import { CurrentUser } from 'src/auth/decorators/user.decorator';
+import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Controller('/task')
 export class TaskController {
@@ -51,5 +52,13 @@ export class TaskController {
   @UseGuards(JwtAuthGuard)
   async deleteTask(@Param('id') id: string, @CurrentUser('id') userId: string) {
     return this.taskService.deleteTask(id, userId);
+  }
+
+  @UsePipes(new ValidationPipe())
+  @HttpCode(200)
+  @Put('update/order')
+  @UseGuards(JwtAuthGuard)
+  async updateOrderTask(@Body() updateTaskDto: UpdateTaskDto) {
+    return this.taskService.updateOrderTask(updateTaskDto.ids);
   }
 }
