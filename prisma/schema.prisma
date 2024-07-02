@@ -25,7 +25,7 @@ model User {
 model Project {
   id           String     @id @default(cuid())
   date_created DateTime   @default(now())
-  name         String     @db.VarChar(64)
+  name         String     @unique @db.VarChar(64)
   description  String?    @db.VarChar(128)
   userId       String     @map("user_id")
   user         User       @relation(fields: [userId], references: [id])
@@ -39,7 +39,6 @@ model Task {
   date_created  DateTime  @default(now())
   date_modified DateTime  @updatedAt
   name          String
-  isCompleted   Boolean   @default(false) @map("is_completed")
   taskListId    String   @map("task_list_id")
   userId        String    @map("user_id")
   order         Int       @default(autoincrement())
@@ -56,7 +55,7 @@ model TaskList {
   projectId   String  @map("project_id")
   order       Int     @default(autoincrement())
   tasks       Task[]
-  project     Project @relation(fields: [projectId], references: [id])
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@map("task_list")
 }

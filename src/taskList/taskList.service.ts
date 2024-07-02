@@ -1,7 +1,8 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { TaskListDto } from './taskList.dto';
+import { TaskListDto } from './dto/taskList.dto';
 import { ProjectService } from 'src/project/project.service';
+import { TaskListUpdateDto } from './dto/taskList.update.dto';
 
 // МОЖНО СВЯЗАТЬ С USER И СДЕЛАТЬ ЗАПРОСЫ ПОДОБНЫЕ В ДРУГИХ СУЩНОСТЯХ
 @Injectable()
@@ -27,20 +28,21 @@ export class TaskListService {
   }
 
   async createTaskList(userId: string, dto: TaskListDto) {
-    const { value, project_id } = dto;
+    const { project_id } = dto;
+    delete dto.project_id;
 
     const projectsOfUser = this.projectService.getProjectByUserId(userId);
     let findProjectArray = (await projectsOfUser).filter(
       (obj) => obj.id === project_id,
     );
-    let findProject;
+    let findProject: any;
     findProjectArray.map((obj) => (findProject = obj));
 
     if (!findProject) throw new HttpException('Project Not Found', 404);
 
     return this.prisma.taskList.create({
       data: {
-        value,
+        ...dto,
         project: {
           connect: {
             id: findProject.id,
@@ -53,19 +55,47 @@ export class TaskListService {
     });
   }
 
-  async updateTaskList(taskListId, userId, dto: Partial<TaskListDto>) {
-    return this.prisma.taskList.update({
-      where: {
-        id: taskListId,
-        project: {
-          userId,
+  async updateTaskList(
+    taskListId: string,
+    userId: string,
+    dto: TaskListUpdateDto,
+  ) {
+    if (!dto.project_id) {
+      return this.prisma.taskList.update({
+        where: {
+          id: taskListId,
+          project: {
+            userId,
+          },
         },
-      },
-      data: dto,
-    });
+        data: dto,
+        include: {
+          project: true,
+        },
+      });
+    } else {
+      const { project_id } = dto;
+      delete dto.project_id;
+
+      return this.prisma.taskList.update({
+        where: {
+          id: taskListId,
+          project: {
+            userId,
+          },
+        },
+        data: {
+          projectId: project_id,
+          ...dto,
+        },
+        include: {
+          project: true,
+        },
+      });
+    }
   }
 
-  async deleteTask(taskListId, userId) {
+  async deleteTask(taskListId: string, userId: string) {
     return this.prisma.taskList.delete({
       where: {
         id: taskListId,

@@ -2,6 +2,7 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { UserDto } from './dto/user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hash } from 'argon2';
+import { UserUpdateDto } from './dto/user-update.dto';
 
 @Injectable()
 export class UserService {
@@ -46,7 +47,7 @@ export class UserService {
     });
   }
 
-  async getProfile(id: string) {
+  async getProfile(id: string, userId: string) {
     // УБРАТЬ ЗАПРОСЫ И СДЕЛАТЬ ЧЕРЕЗ JOIN (PRISMA INCLUDE)
     // const user = await this.getUserById(id);
     // const projects = await this.prisma.project.findMany({
@@ -64,6 +65,9 @@ export class UserService {
     //     taskId: { in: tasksList.map((obj) => obj.id) },
     //   },
     // });
+
+    if (id !== userId)
+      throw new HttpException('The user can only view their own data', 403);
 
     const profile = await this.prisma.user.findMany({
       omit: {
@@ -90,12 +94,14 @@ export class UserService {
   }
 
   async createUser(dto: UserDto) {
+    console.log(dto);
     const user = {
       email: dto.email,
       name: dto.name,
       nickname: dto.nickname,
       password: await hash(dto.password),
     };
+    console.log(user);
 
     return this.prisma.user.create({
       data: user,
@@ -105,7 +111,7 @@ export class UserService {
     });
   }
 
-  async updateUserById(id: string, userId: string, dto: UserDto) {
+  async updateUserById(id: string, userId: string, dto: UserUpdateDto) {
     let data = dto;
     const findUser = await this.getUserById(id, userId);
     if (!findUser) throw new HttpException('User Not Found', 404);
@@ -118,6 +124,17 @@ export class UserService {
       where: { id },
       data,
       include: { projects: true },
+    });
+  }
+
+  async removeUserById(id: string, userId: string) {
+    if (id !== userId)
+      throw new HttpException('The user can only view their own data', 403);
+
+    return this.prisma.user.delete({
+      where: {
+        id,
+      },
     });
   }
 }

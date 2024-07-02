@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Exclude } from 'class-transformer';
 import { User } from '@prisma/client';
 
 export class UserModel implements User {
@@ -32,11 +33,14 @@ export class UserModel implements User {
     description: 'Уникальный никнейм пользователя',
   })
   nickname: string;
+
+  @Exclude()
   @ApiProperty({
     example: '$argon2id$v=19$m=65536',
     description: 'Пароль, хешируется автоматически',
   })
   password: string;
+
   @ApiProperty({
     example: '[{...}, {...}, {...}]',
     description: 'Проекты пользователя',

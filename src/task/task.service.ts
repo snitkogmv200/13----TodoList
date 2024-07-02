@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TaskDto } from './dto/task.dto';
+import { TaskUpdateOrderDto } from './dto/task.order.update.dto';
+import { TaskUpdateDto } from './dto/task.update.dto';
 
 @Injectable()
 export class TaskService {
@@ -38,7 +40,7 @@ export class TaskService {
     });
   }
 
-  async updateTask(taskId: string, userId: string, dto: Partial<TaskDto>) {
+  async updateTask(taskId: string, userId: string, dto: TaskUpdateDto) {
     return this.prisma.task.update({
       where: {
         id: taskId,

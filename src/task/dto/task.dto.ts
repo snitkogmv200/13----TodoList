@@ -1,19 +1,11 @@
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class TaskDto {
-  @IsString()
-  @IsOptional()
+  @IsString({ message: 'Должно быть строкой' })
+  @IsNotEmpty({ message: 'Поле «name» обязательно для заполнения' })
   name: string;
 
-  @IsString()
-  @IsOptional()
-  date_modified?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  is_completed?: boolean;
-
-  @IsString()
-  @IsOptional()
+  @IsString({ message: 'Должно быть строкой' })
+  @IsNotEmpty({ message: 'Поле «task_list_id» обязательно для заполнения' })
   task_list_id: string;
 }

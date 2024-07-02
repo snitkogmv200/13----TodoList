@@ -3,19 +3,20 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
+  HttpException,
   Param,
   Post,
   Put,
   UseGuards,
   UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
+import { ValidationPipe } from 'src/pipes/validation.pipe';
 import { TaskService } from './task.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { TaskDto } from './dto/task.dto';
 import { CurrentUser } from 'src/auth/decorators/user.decorator';
-import { UpdateTaskDto } from './dto/update-task.dto';
+import { TaskUpdateOrderDto } from './dto/task.order.update.dto';
+import { TaskUpdateDto } from './dto/task.update.dto';
 
 @Controller('/task')
 export class TaskController {
@@ -27,38 +28,43 @@ export class TaskController {
     return this.taskService.getTaskByUserId(userId);
   }
 
-  @UsePipes(new ValidationPipe())
-  @HttpCode(200)
-  @Post()
+  // @UsePipes(ValidationPipe)
   @UseGuards(JwtAuthGuard)
-  async createTask(@CurrentUser('id') userId: string, @Body() dto: TaskDto) {
+  @Post()
+  async createTask(
+    @CurrentUser('id') userId: string,
+    @Body(new ValidationPipe()) dto: TaskDto,
+  ) {
     return this.taskService.createTask(userId, dto);
   }
 
-  @UsePipes(new ValidationPipe())
-  @HttpCode(200)
-  @Put(':id')
   @UseGuards(JwtAuthGuard)
+  @Put(':id')
   async updateTask(
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
-    @Body() dto: TaskDto,
+    @Body(new ValidationPipe()) dto: TaskUpdateDto,
   ) {
     return this.taskService.updateTask(id, userId, dto);
   }
 
-  @HttpCode(200)
-  @Delete(':id')
   @UseGuards(JwtAuthGuard)
+  @Delete(':id')
   async deleteTask(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    return this.taskService.deleteTask(id, userId);
+    const task = this.taskService.deleteTask(id, userId);
+
+    if (!task) throw new HttpException('Task Not Found', 404);
+
+    return 'Task удалён';
   }
 
-  @UsePipes(new ValidationPipe())
-  @HttpCode(200)
-  @Put('update/order')
+  // ПЕРЕДАЁТСЯ ОБЬЕКТ СО СВОЙСТВОМ "ids"
   @UseGuards(JwtAuthGuard)
-  async updateOrderTask(@Body() updateTaskDto: UpdateTaskDto) {
+  @Put('update/order')
+  async updateOrderTask(
+    @Body(new ValidationPipe()) updateTaskDto: TaskUpdateOrderDto,
+  ) {
+    console.log(updateTaskDto);
     return this.taskService.updateOrderTask(updateTaskDto.ids);
   }
 }
