@@ -38,10 +38,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    const user = await this.userService.getUserById(id, userId);
-    if (!user) throw new HttpException('User Not Found', 404);
-
-    return user;
+    return await this.userService.getUserById(id, userId);
   }
 
   // ПОЛУЧЕНИЕ ПРОФИЛЯ ПОЛЬЗОВАТЕЛЯ ПО ЕГО ID
@@ -93,7 +90,6 @@ export class UserController {
     const user = await this.userService.removeUserById(id, userId);
 
     if (!user) throw new HttpException('User Not Found', 404);
-
-    return 'Пользователь удалён';
+    else return 'Пользователь удалён';
   }
 }

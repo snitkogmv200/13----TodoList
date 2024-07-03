@@ -35,10 +35,6 @@ export class UserModel implements User {
   nickname: string;
 
   @Exclude()
-  @ApiProperty({
-    example: '$argon2id$v=19$m=65536',
-    description: 'Пароль, хешируется автоматически',
-  })
   password: string;
 
   @ApiProperty({

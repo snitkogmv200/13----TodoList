@@ -64,7 +64,6 @@ export class TaskController {
   async updateOrderTask(
     @Body(new ValidationPipe()) updateTaskDto: TaskUpdateOrderDto,
   ) {
-    console.log(updateTaskDto);
     return this.taskService.updateOrderTask(updateTaskDto.ids);
   }
 }

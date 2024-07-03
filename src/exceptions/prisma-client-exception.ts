@@ -1,29 +1,35 @@
-import { ArgumentsHost, Catch, HttpStatus } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Prisma } from '@prisma/client';
 import { Response } from 'express';
+import { errorMappings } from './errorMappings';
 
 @Catch(Prisma.PrismaClientKnownRequestError)
 export class PrismaClientExceptionFilter extends BaseExceptionFilter {
   catch(exception: Prisma.PrismaClientKnownRequestError, host: ArgumentsHost) {
-    console.error(exception.message);
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const message = exception.message.replace(/\n/g, '');
+    const request = ctx.getRequest<Request>();
 
-    switch (exception.code) {
-      case 'P2002': {
-        const status = HttpStatus.CONFLICT;
-        response.status(status).json({
-          statusCode: status,
-          message: message,
-        });
-        break;
-      }
-      default:
-        // default 500 error code
-        super.catch(exception, host);
-        break;
+    const errorCode = exception.code;
+    const errorMapping = errorMappings[errorCode];
+
+    if (errorMapping) {
+      const { status, message } = errorMapping;
+      response.status(status).json({
+        statusCode: status,
+        message: `${message}, Error Code: ${errorCode.replace('P', 'BG')}`,
+      });
+    } else {
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
+      super.catch(exception, host);
     }
   }
 }

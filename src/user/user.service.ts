@@ -10,7 +10,10 @@ export class UserService {
 
   async getUserById(id: string, userId: string) {
     if (id !== userId)
-      throw new HttpException('The user can only view their own data', 403);
+      throw new HttpException(
+        'Пользователь может просматривать только свои собственные данные',
+        403,
+      );
 
     return this.prisma.user.findUnique({
       omit: {
@@ -67,7 +70,10 @@ export class UserService {
     // });
 
     if (id !== userId)
-      throw new HttpException('The user can only view their own data', 403);
+      throw new HttpException(
+        'Пользователь может просматривать только свои собственные данные',
+        403,
+      );
 
     const profile = await this.prisma.user.findMany({
       omit: {
@@ -94,14 +100,12 @@ export class UserService {
   }
 
   async createUser(dto: UserDto) {
-    console.log(dto);
     const user = {
       email: dto.email,
       name: dto.name,
       nickname: dto.nickname,
       password: await hash(dto.password),
     };
-    console.log(user);
 
     return this.prisma.user.create({
       data: user,
@@ -114,7 +118,7 @@ export class UserService {
   async updateUserById(id: string, userId: string, dto: UserUpdateDto) {
     let data = dto;
     const findUser = await this.getUserById(id, userId);
-    if (!findUser) throw new HttpException('User Not Found', 404);
+    if (!findUser) throw new HttpException('Пользователь не найден', 404);
 
     if (dto.password) {
       data = { ...dto, password: await hash(dto.password) };
@@ -129,7 +133,10 @@ export class UserService {
 
   async removeUserById(id: string, userId: string) {
     if (id !== userId)
-      throw new HttpException('The user can only view their own data', 403);
+      throw new HttpException(
+        'Пользователь может просматривать только свои собственные данные',
+        403,
+      );
 
     return this.prisma.user.delete({
       where: {

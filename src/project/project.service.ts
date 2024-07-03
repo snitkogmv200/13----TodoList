@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, HttpException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ProjectDto } from './dto/project.dto';
 import { ProjectUpdateDto } from './dto/project-update.dto';
@@ -53,12 +53,18 @@ export class ProjectService {
   }
 
   async deleteProject(projectId: string, userId: string) {
-    return this.prisma.project.delete({
-      where: {
-        id: projectId,
-        userId,
-      },
-    });
+    try {
+      const project = this.prisma.project.delete({
+        where: {
+          id: projectId,
+          userId,
+        },
+      });
+
+      return project;
+    } catch (error) {
+      throw new ForbiddenException('Credentials');
+    }
   }
 
   // async dragProject(taskId) {

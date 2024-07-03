@@ -3,13 +3,12 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
   HttpException,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   UseGuards,
-  UsePipes,
 } from '@nestjs/common';
 import { ValidationPipe } from 'src/pipes/validation.pipe';
 import { ProjectService } from './project.service';
@@ -53,17 +52,12 @@ export class ProjectController {
     return project;
   }
 
-  @HttpCode(200)
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   async deleteProject(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
   ) {
-    const project = this.projectService.deleteProject(id, userId);
-
-    if (!project) throw new HttpException('Project Not Found', 404);
-
-    return 'Проект удалён';
+    return this.projectService.deleteProject(id, userId);
   }
 }
