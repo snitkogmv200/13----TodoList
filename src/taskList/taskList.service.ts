@@ -38,7 +38,7 @@ export class TaskListService {
     let findProject: any;
     findProjectArray.map((obj) => (findProject = obj));
 
-    if (!findProject) throw new HttpException('Project Not Found', 404);
+    if (!findProject) throw new HttpException('Проект не найден', 404);
 
     return this.prisma.taskList.create({
       data: {

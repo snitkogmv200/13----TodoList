@@ -8,7 +8,6 @@ import {
   Post,
   Put,
   UseGuards,
-  UsePipes,
 } from '@nestjs/common';
 import { ValidationPipe } from 'src/pipes/validation.pipe';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -16,17 +15,25 @@ import { CurrentUser } from 'src/auth/decorators/user.decorator';
 import { TaskListService } from './taskList.service';
 import { TaskListDto } from './dto/taskList.dto';
 import { TaskListUpdateDto } from './dto/taskList.update.dto';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { TaskListModel } from './entity/taskList.entity';
+import { TaskListSendModel } from './entity/taskList.send.entity';
 
+@ApiTags('Список задач')
 @Controller('/taskList')
 export class TaskListController {
   constructor(private taskService: TaskListService) {}
 
-  @Get()
+  @ApiOperation({ summary: 'Получение всего списка задач всех проектов' })
+  @ApiResponse({ status: 200, type: [TaskListModel] })
   @UseGuards(JwtAuthGuard)
+  @Get()
   async getAllTaskList(@CurrentUser('id') userId: string) {
     return this.taskService.getTaskListByUserId(userId);
   }
 
+  @ApiOperation({ summary: 'Создание списка задач' })
+  @ApiResponse({ status: 201, type: [TaskListSendModel] })
   @UseGuards(JwtAuthGuard)
   @Post()
   async createTaskList(
@@ -36,6 +43,8 @@ export class TaskListController {
     return this.taskService.createTaskList(userId, dto);
   }
 
+  @ApiOperation({ summary: 'Изменение данных списка задач' })
+  @ApiResponse({ status: 200, type: [TaskListSendModel] })
   @UseGuards(JwtAuthGuard)
   @Put(':id')
   async updateTaskList(
@@ -45,11 +54,13 @@ export class TaskListController {
   ) {
     const taskList = this.taskService.updateTaskList(id, userId, dto);
 
-    if (!taskList) throw new HttpException('TaskList Not Found', 404);
+    if (!taskList) throw new HttpException('Список задач не найден', 404);
 
     return taskList;
   }
 
+  @ApiOperation({ summary: 'Удаление списка задач' })
+  @ApiResponse({ status: 200, type: Delete })
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async deleteTaskList(
@@ -58,7 +69,7 @@ export class TaskListController {
   ) {
     const taskList = this.taskService.deleteTask(id, userId);
 
-    if (!taskList) throw new HttpException('TaskList Not Found', 404);
+    if (!taskList) throw new HttpException('Список задач не найден', 404);
 
     return 'TaskList удалён';
   }

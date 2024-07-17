@@ -49,6 +49,9 @@ export class ProjectService {
         userId,
       },
       data: dto,
+      include: {
+        tasks_list: true,
+      },
     });
   }
 

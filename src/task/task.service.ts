@@ -60,7 +60,6 @@ export class TaskService {
   }
 
   async updateOrderTask(ids: string[]) {
-    console.log(ids);
     return this.prisma.$transaction(
       ids.map((id, order) =>
         this.prisma.task.update({

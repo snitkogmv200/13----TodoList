@@ -21,16 +21,19 @@ export class UserModel implements User {
   @ApiProperty({
     example: 'grisha@mail.ru',
     description: 'email',
+    required: true,
   })
   email: string;
   @ApiProperty({
     example: 'Гриша',
     description: 'Имя пользователя',
+    required: true,
   })
   name: string;
   @ApiProperty({
     example: 'Grishan',
     description: 'Уникальный никнейм пользователя',
+    required: true,
   })
   nickname: string;
 

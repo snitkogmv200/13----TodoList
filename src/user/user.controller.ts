@@ -12,7 +12,7 @@ import {
 import { UserService } from './user.service';
 import { UserDto } from './dto/user.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { UserModel } from './user.entity';
+import { UserModel } from './entity/user.entity';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ValidationPipe } from 'src/pipes/validation.pipe';
 import { CurrentUser } from 'src/auth/decorators/user.decorator';
@@ -23,16 +23,14 @@ import { UserUpdateDto } from './dto/user-update.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // CОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ
   @ApiOperation({ summary: 'Создание пользователя' })
-  @ApiResponse({ status: 200, type: UserModel })
+  @ApiResponse({ status: 201, type: UserModel })
   @UseGuards(JwtAuthGuard)
   @Post()
   async create(@Body(new ValidationPipe()) createUserDto: UserDto) {
     return this.userService.createUser(createUserDto);
   }
 
-  // ПОЛУЧЕНИЕ ПОЛЬЗОВАТЕЛЯ ПО ЕГО ID
   @ApiOperation({ summary: 'Получение пользователя' })
   @ApiResponse({ status: 200, type: UserModel })
   @UseGuards(JwtAuthGuard)
@@ -41,7 +39,6 @@ export class UserController {
     return await this.userService.getUserById(id, userId);
   }
 
-  // ПОЛУЧЕНИЕ ПРОФИЛЯ ПОЛЬЗОВАТЕЛЯ ПО ЕГО ID
   @ApiOperation({ summary: 'Получение профиля' })
   @ApiResponse({ status: 200, type: UserModel })
   @UseGuards(JwtAuthGuard)
@@ -50,13 +47,9 @@ export class UserController {
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
   ) {
-    const profile = await this.userService.getProfile(id, userId);
-    if (!profile) throw new HttpException('Profile Not Found', 404);
-
-    return profile;
+    return await this.userService.getProfile(id, userId);
   }
 
-  // ПОИСК ВСЕХ ПОЛЬЗОВАТЕЛЕЙ
   @ApiOperation({
     summary:
       'Получение всех пользователей (Нарушает приватность пользователей, сделал для себя)',
@@ -65,10 +58,9 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get()
   async findAll() {
-    return this.userService.getUsers();
+    return await this.userService.getUsers();
   }
 
-  // ОБНОВЛЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ
   @ApiOperation({ summary: 'Редактирование пользователя' })
   @ApiResponse({ status: 200, type: UserModel })
   @UseGuards(JwtAuthGuard)
@@ -78,10 +70,9 @@ export class UserController {
     @CurrentUser('id') userId: string,
     @Body(new ValidationPipe()) dto: UserUpdateDto,
   ) {
-    return this.userService.updateUserById(id, userId, dto);
+    return await this.userService.updateUserById(id, userId, dto);
   }
 
-  // УДАЛЕНИЕ ПОЛЬЗОВАТЕЛЯ
   @ApiOperation({ summary: 'Удаление пользователя' })
   @ApiResponse({ status: 200, type: 'Пользователь удалён' })
   @UseGuards(JwtAuthGuard)
@@ -89,7 +80,7 @@ export class UserController {
   async remove(@Param('id') id: string, @CurrentUser('id') userId: string) {
     const user = await this.userService.removeUserById(id, userId);
 
-    if (!user) throw new HttpException('User Not Found', 404);
+    if (!user) throw new HttpException('Пользователь не найден', 404);
     else return 'Пользователь удалён';
   }
 }
