@@ -16,7 +16,7 @@ export class RoleDto {
 
   @ApiProperty({
     example: 'Имеет доступ к просмотру данных всех пользователей',
-    description: 'Описание Role',
+    description: 'Описание роли',
     required: false,
   })
   @IsString({ message: 'Должно быть строкой' })

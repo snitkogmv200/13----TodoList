@@ -1,9 +1,11 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserDto } from './dto/user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hash } from 'argon2';
 import { UserUpdateDto } from './dto/user-update.dto';
 import { RoleService } from 'src/role/role.service';
+import { Role } from 'src/role/entity/role.enum';
+import { AddRoleDto } from 'src/role/dto/role-add.dto';
 
 @Injectable()
 export class UserService {
@@ -56,6 +58,17 @@ export class UserService {
     return this.prisma.user.findMany({
       omit: {
         password: true,
+      },
+      include: {
+        user_roles: {
+          omit: {
+            userId: true,
+            roleId: true,
+          },
+          include: {
+            role: {},
+          },
+        },
       },
     });
   }
@@ -127,7 +140,7 @@ export class UserService {
     };
 
     const role = await this.roleService.createIfNotExistsRole({
-      value: 'USER',
+      value: Role.USER,
     });
 
     return this.prisma.user.create({
@@ -202,5 +215,58 @@ export class UserService {
         id,
       },
     });
+  }
+
+  async addRole(dto: AddRoleDto) {
+    const user = await this.getUserById(dto.userId, dto.userId);
+    const role = await this.roleService.createIfNotExistsRole({
+      value: dto.value,
+    });
+
+    if (role && user) {
+      return await this.prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          user_roles: {
+            connectOrCreate: [
+              {
+                where: {
+                  id: user.user_roles.find((obj) => obj.role.id === role.id)
+                    ? user.user_roles.find((obj) => obj.role.id === role.id).id
+                    : '',
+                },
+                create: {
+                  role: {
+                    connect: {
+                      value: role.value,
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+        select: {
+          nickname: true,
+          user_roles: {
+            select: {
+              role: {
+                select: {
+                  value: true,
+                  description: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+
+    throw new HttpException(
+      'Пользователь или роль не найдены',
+      HttpStatus.NOT_FOUND,
+    );
   }
 }

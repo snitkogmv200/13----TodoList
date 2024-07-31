@@ -8,6 +8,7 @@ import {
   HttpException,
   Put,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserDto } from './dto/user.dto';
@@ -19,12 +20,18 @@ import { CurrentUser } from 'src/auth/decorators/user.decorator';
 import { UserUpdateDto } from './dto/user-update.dto';
 import { RolesGuard } from 'src/auth/role.guard';
 import { Roles } from 'src/auth/role-auth.decorator';
-import { Role } from 'src/role/entities/role.enum';
+import { Role } from 'src/role/entity/role.enum';
+import { AddRoleDto } from 'src/role/dto/role-add.dto';
+import { RoleService } from 'src/role/role.service';
+import { UserRoleModel } from './entity/user-role.entity';
 
 @ApiTags('Пользователи')
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly roleService: RoleService,
+  ) {}
 
   // Выводит захеш. пароль пользователя, но этот контроллер впринципе не нужен, так как пользователь создаётся через регистрацию, функционал сделан для наглядности
   @ApiOperation({ summary: 'Создание пользователя' })
@@ -32,7 +39,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Post()
   async create(@Body(new ValidationPipe()) createUserDto: UserDto) {
-    return this.userService.createUser(createUserDto);
+    return await this.userService.createUser(createUserDto);
   }
 
   @ApiOperation({ summary: 'Получение пользователя' })
@@ -40,7 +47,13 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    return await this.userService.getUserById(id, userId);
+    const user = await this.userService.getUserById(id, userId);
+
+    if (!user) {
+      throw new NotFoundException(`Указанный пользователь: ${user} не найдет.`);
+    }
+
+    return user;
   }
 
   @ApiOperation({ summary: 'Получение профиля' })
@@ -87,5 +100,14 @@ export class UserController {
 
     if (!user) throw new HttpException('Пользователь не найден', 404);
     else return 'Пользователь удалён';
+  }
+
+  @ApiOperation({ summary: 'Выдача ролей пользователю' })
+  @ApiResponse({ status: 201, type: UserRoleModel })
+  @Roles('ADMIN')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Post('/role')
+  addRole(@Body(new ValidationPipe()) dto: AddRoleDto) {
+    return this.userService.addRole(dto);
   }
 }

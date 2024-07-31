@@ -29,7 +29,7 @@ model Project {
   name         String     @unique @db.VarChar(64)
   description  String?    @db.VarChar(128)
   userId       String     @map("user_id")
-  user         User       @relation(fields: [userId], references: [id])
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   tasks_list   TaskList[]
 
   @@map("project")
@@ -44,7 +44,7 @@ model Task {
   userId        String    @map("user_id")
   order         Int       @default(autoincrement())
   task_list     TaskList @relation(fields: [taskListId], references: [id], onDelete: Cascade)
-  user          User      @relation(fields: [userId], references: [id])
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("task")
 }
