@@ -8,7 +8,6 @@ import {
   Post,
   Put,
   UseGuards,
-  UsePipes,
 } from '@nestjs/common';
 import { ValidationPipe } from 'src/pipes/validation.pipe';
 import { TaskService } from './task.service';

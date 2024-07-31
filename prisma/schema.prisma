@@ -18,6 +18,7 @@ model User {
   nickname      String    @unique @db.VarChar(64)
   projects      Project[]
   tasks         Task[]
+  user_roles    UserRoles[]
 
   @@map("user")
 }
@@ -38,7 +39,7 @@ model Task {
   id            String    @id @default(cuid())
   date_created  DateTime  @default(now())
   date_modified DateTime  @updatedAt
-  name          String
+  name          String   @db.VarChar(64)
   taskListId    String   @map("task_list_id")
   userId        String    @map("user_id")
   order         Int       @default(autoincrement())
@@ -58,4 +59,23 @@ model TaskList {
   project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@map("task_list")
+}
+
+model Role {
+  id          String  @id @default(cuid())
+  value       String  @unique @db.VarChar(64)
+  description String? @db.VarChar(128)
+  user_roles    UserRoles[]
+
+  @@map("role")
+}
+
+model UserRoles {
+  id          String  @id @default(cuid())
+  userId    String   @map("user_id")
+  roleId        String    @map("role_id")
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@map("user_roles")
 }

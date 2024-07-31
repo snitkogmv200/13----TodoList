@@ -17,12 +17,16 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ValidationPipe } from 'src/pipes/validation.pipe';
 import { CurrentUser } from 'src/auth/decorators/user.decorator';
 import { UserUpdateDto } from './dto/user-update.dto';
+import { RolesGuard } from 'src/auth/role.guard';
+import { Roles } from 'src/auth/role-auth.decorator';
+import { Role } from 'src/role/entities/role.enum';
 
 @ApiTags('Пользователи')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  // Выводит захеш. пароль пользователя, но этот контроллер впринципе не нужен, так как пользователь создаётся через регистрацию, функционал сделан для наглядности
   @ApiOperation({ summary: 'Создание пользователя' })
   @ApiResponse({ status: 201, type: UserModel })
   @UseGuards(JwtAuthGuard)
@@ -55,7 +59,8 @@ export class UserController {
       'Получение всех пользователей (Нарушает приватность пользователей, сделал для себя)',
   })
   @ApiResponse({ status: 200, type: [UserModel] })
-  @UseGuards(JwtAuthGuard)
+  @Roles(Role.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Get()
   async findAll() {
     return await this.userService.getUsers();

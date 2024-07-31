@@ -3,10 +3,14 @@ import { UserDto } from './dto/user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hash } from 'argon2';
 import { UserUpdateDto } from './dto/user-update.dto';
+import { RoleService } from 'src/role/role.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private roleService: RoleService,
+  ) {}
 
   async getUserById(id: string, userId: string) {
     if (id !== userId)
@@ -23,6 +27,15 @@ export class UserService {
         id,
       },
       include: {
+        user_roles: {
+          omit: {
+            userId: true,
+            roleId: true,
+          },
+          include: {
+            role: {},
+          },
+        },
         projects: true,
       },
     });
@@ -43,9 +56,6 @@ export class UserService {
     return this.prisma.user.findMany({
       omit: {
         password: true,
-      },
-      include: {
-        projects: true,
       },
     });
   }
@@ -92,6 +102,15 @@ export class UserService {
             },
           },
         },
+        user_roles: {
+          omit: {
+            userId: true,
+            roleId: true,
+          },
+          include: {
+            role: {},
+          },
+        },
       },
     });
 
@@ -107,9 +126,35 @@ export class UserService {
       password: await hash(dto.password),
     };
 
+    const role = await this.roleService.createIfNotExistsRole({
+      value: 'USER',
+    });
+
     return this.prisma.user.create({
-      data: user,
+      data: {
+        ...user,
+        user_roles: {
+          create: [
+            {
+              role: {
+                connect: {
+                  value: role.value,
+                },
+              },
+            },
+          ],
+        },
+      },
       include: {
+        user_roles: {
+          omit: {
+            userId: true,
+            roleId: true,
+          },
+          include: {
+            role: {},
+          },
+        },
         projects: true,
       },
     });
@@ -127,7 +172,21 @@ export class UserService {
     return this.prisma.user.update({
       where: { id },
       data,
-      include: { projects: true },
+      omit: {
+        password: true,
+      },
+      include: {
+        user_roles: {
+          omit: {
+            userId: true,
+            roleId: true,
+          },
+          include: {
+            role: {},
+          },
+        },
+        projects: true,
+      },
     });
   }
 

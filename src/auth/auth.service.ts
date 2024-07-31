@@ -29,12 +29,16 @@ export class AuthService {
     }
 
     const user = await this.userService.createUser(userDto);
+    let roleUser = user.user_roles.find((obj) => obj.role.value === 'ADMIN');
 
-    return this.generateToken(user);
+    if (!roleUser) {
+      return this.generateToken(user, 'USER');
+    }
+    return this.generateToken(user, 'ADMIN');
   }
 
-  private async generateToken(user: User) {
-    const payload = { id: user.id, email: user.email };
+  private async generateToken(user: User, role: string) {
+    const payload = { id: user.id, email: user.email, role };
 
     return {
       token: this.jwtService.sign(payload),
@@ -43,7 +47,15 @@ export class AuthService {
 
   async login(userDto: AuthDto) {
     const user = await this.validateUser(userDto);
-    return this.generateToken(user);
+    const userData = await this.userService.getUserById(user.id, user.id);
+    let roleUser = userData.user_roles.find(
+      (obj) => obj.role.value === 'ADMIN',
+    );
+
+    if (!roleUser) {
+      return this.generateToken(user, 'USER');
+    }
+    return this.generateToken(user, 'ADMIN');
   }
 
   private async validateUser(userDto: AuthDto) {
